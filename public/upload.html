@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AJAX with Fetch</title>
+</head>
+<body>
+    <h1>Using Fetch to Upload Files</h1>
+    <form action="#">
+        <div>
+            <input type="file" id="mypic" multiple />
+        </div>
+        <div>
+            <button id="btnSubmit">Upload</button>
+        </div>
+    </form>
+    <div id="output">
+        <!-- output goes here -->
+
+    </div>
+
+    <script>
+document.addEventListener('DOMContentLoaded', init);
+
+function init(){
+    document.getElementById('btnSubmit').addEventListener('click', upload);
+}
+
+function upload(ev){
+    ev.preventDefault();    //stop the form submitting
+    let h = new Headers();
+    h.append("Access-Control-Allow-Origin", "*");
+    h.append("enctype","multipart/form-data")
+    //create any headers we want
+    var formdata = new FormData();
+    var files = document.getElementById('mypic').files;
+    formdata.append("mypic", files[0], "ZKC_20190602_125221.jpg");
+    var requestOptions = {
+          method: 'POST',
+          headers: h,
+          body: formdata,
+    };
+
+fetch("http://localhost:8000/uploadDocument", requestOptions)
+  .then(response => response.text())
+  .then(result => console.log(result))
+  .catch(error => console.log('error', error));
+}
+   </script>
+</body>
+</html>
