@@ -4,12 +4,20 @@ const dotenv = require('dotenv');
 const logger = require('morgan');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 
 const indexRouter = require('./routes/index');
 
 const app = express();
 
 dotenv.config();
+
+mongoose.connect(process.env.DB_CONNECT, { useNewUrlParser: true, useUnifiedTopology: true });
+const db = mongoose.connection;
+db.on('connected', () => {
+  console.log('connected to mongodb');
+});
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 app.use(logger('dev'));
 app.use(express.json());
