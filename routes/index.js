@@ -4,6 +4,7 @@ const path = require('path');
 const indexController = require('../controllers/indexController');
 const uploadController = require('../controllers/uploadController');
 const Request = require('../models/Request');
+const pendingRequestController = require('../controllers/pendingRequestController');
 
 const router = express.Router();
 
@@ -25,5 +26,6 @@ router.post('/request/delete', (req, res) => {
     else res.status(200).json({ success: true });
   });
 });
+router.get('/getPendingRequest', pendingRequestController.getPending);
 
 module.exports = router;

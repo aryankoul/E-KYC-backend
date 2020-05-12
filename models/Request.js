@@ -15,7 +15,7 @@ const requestSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
   },
-  filePath: {
+  fileName: {
     type: String,
   },
 });

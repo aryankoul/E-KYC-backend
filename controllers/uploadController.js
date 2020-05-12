@@ -3,13 +3,15 @@ const path = require('path');
 
 const Request = require('../models/Request');
 
+var fileName='';
 const storage = multer.diskStorage({
   destination (req, file, cb) {
     // Uploads is the Upload_folder_name
     cb(null, 'uploads');
   },
   filename (req, file, cb) {
-    cb(null, `${req.query.phoneNumber}-${Date.now()}.jpg`);
+      fileName =`${req.query.phoneNumber}-${Date.now()}.jpg`;
+    cb(null, fileName);
   },
 });
 
@@ -43,9 +45,8 @@ exports.upload = (req, res) => {
       res.status(500).json({ success: false, error: err });
     } else {
       const { name, phoneNumber, verifierAddress } = req.query;
-      const filePath = req.file.filename;
       const newRequest = new Request({
-        name, phoneNumber, verifierAddress, filePath, type: '1',
+        name, phoneNumber, verifierAddress, fileName, type: '1',
       });
       newRequest.save((error, request) => {
         if (error) res.status(500).json({ success: false, error });
