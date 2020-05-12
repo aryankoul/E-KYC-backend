@@ -43,7 +43,7 @@ exports.upload = (req, res) => {
       res.status(500).json({ success: false, error: err });
     } else {
       const { name, phoneNumber, verifierAddress } = req.query;
-      const filePath = req.file.path;
+      const filePath = req.file.filename;
       const newRequest = new Request({
         name, phoneNumber, verifierAddress, filePath, type: '1',
       });
