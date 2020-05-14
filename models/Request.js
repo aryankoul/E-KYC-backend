@@ -18,6 +18,12 @@ const requestSchema = new mongoose.Schema({
   fileName: {
     type: String,
   },
+  email: {
+    type: String,
+  },
+  docType: {
+    type: String,
+  },
 });
 
 module.exports = mongoose.model('Request', requestSchema);

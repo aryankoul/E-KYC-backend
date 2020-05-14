@@ -21,6 +21,7 @@ router.get('/download/:file', (req, res) => {
 
 router.post('/request/delete', (req, res) => {
   const { _id } = req.body;
+  console.log(req.body._id);
   Request.deleteOne({ _id }, (error) => {
     if (error) res.status(500).json({ success: false, error });
     else res.status(200).json({ success: true });
