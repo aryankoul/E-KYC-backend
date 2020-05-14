@@ -47,10 +47,10 @@ exports.upload = (req, res) => {
     } else {
       console.log(req.body.phoneNumber);
       const {
-        name, phoneNumber, email, docType, verifierAddress,
+        name, phoneNumber, email, docType, verifierAddress, publicKey
       } = req.body;
       const newRequest = new Request({
-        name, phoneNumber, verifierAddress, fileName, type: '1', email, docType,
+        name, phoneNumber, verifierAddress, fileName, type: '1', email, docType, publicKey
       });
       newRequest.save((error, request) => {
         if (error) res.status(500).json({ success: false, error });

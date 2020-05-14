@@ -15,6 +15,15 @@ const requestSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
   },
+  email: {
+    type: String,
+  },
+  documentType: {
+    type: String,
+  },
+  publicKey:{
+    type: String,
+  },
   fileName: {
     type: String,
   },
