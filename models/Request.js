@@ -3,25 +3,20 @@ const mongoose = require('mongoose');
 const requestSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
   },
   type: {
     type: String,
   },
+  userId: {
+    type: String,
+  },
   verifierAddress: {
     type: String,
-    required: true,
   },
   phoneNumber: {
     type: String,
   },
-  email: {
-    type: String,
-  },
-  documentType: {
-    type: String,
-  },
-  publicKey:{
+  publicKey: {
     type: String,
   },
   fileName: {
