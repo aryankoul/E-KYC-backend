@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-
+const account = require('../config/account.json');
 async function sendMail(email,data){
     async function main() {
         // Generate test SMTP service account from ethereal.email
@@ -7,8 +7,8 @@ async function sendMail(email,data){
         var transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: {
-              user: 'kycappeth@gmail.com',
-              pass: '1admin1Kyc1'
+              user: account.user,
+              pass: account.pass
           }
       });
       
