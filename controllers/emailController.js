@@ -16,7 +16,7 @@ async function sendMail(email,data){
         let info = await transporter.sendMail({
           from: '"KYC ADMIN" <kycappeth@gmail.com>', // sender address
           to: email, // list of receivers
-          subject: "Hello ✔", // Subject line
+          subject: "Mail From KYC Services", // Subject line
           text: data, // plain text body
           // html: "<b>Hello world?</b>" // html body
         });
@@ -35,7 +35,7 @@ async function sendMail(email,data){
 
 exports.email = (req, res) => {
 
-    sendMail(req.query.email,req.query.data)
+    sendMail(req.body.email,req.body.data)
 
     res.status(200).json({
       success: true,
