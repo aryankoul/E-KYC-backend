@@ -6,7 +6,7 @@ const axios = require('axios')
 const indexController = require('../controllers/indexController');
 const uploadController = require('../controllers/uploadController');
 const Request = require('../models/Request');
-const FinalData = require('../models/FinalData');
+const KycData = require('../models/KycData');
 const VerificationRequest = require('../models/VerificationRequest');
 const pendingRequestController = require('../controllers/pendingRequestController');
 const emailController = require('../controllers/emailController');
@@ -35,20 +35,9 @@ router.post('/request/delete', (req, res) => {
   });
 });
 
-router.post('/finalData', (req, res) => {
-  const { verifierAddress, data, userId } = req.body;
-  const finalData = new FinalData({
-    verifierAddress, data, userId,
-  });
-  finalData.save((error, data) => {
-    if (error) res.status(500).json({ success: false, error });
-    else res.status(200).json({ success: true });
-  });
-});
-
-router.get('/finalData', (req, res) => {
+router.get('/kycData', (req, res) => {
   const { verifierAddress } = req.body;
-  FinalData.find({ verifierAddress }, (error, data) => {
+  KycData.find({ verifierAddress }, (error, data) => {
     if (error) res.status(500).json({ success: false, error });
     else res.status(200).json({ success: true, data });
   });
@@ -57,17 +46,57 @@ router.get('/finalData', (req, res) => {
 
 router.get('/getPendingRequest', pendingRequestController.getPending);
 
+router.post('/verifyOTP',(req,res)=>{
+
+  const {_id, otp, originalData, pk}= req.body;
+  VerificationRequest.find({ _id }, function (err,requests) {
+    // console.log(requests)
+    if (err || requests.length==0) return res.json({success:false,message:"Could not locate reuqest"})
+    var request = requests[0]
+    if(request.otp == otp){ 
+      console.log()
+      var publicKey = forge.pki.publicKeyFromPem(request.verifierPublicKey);
+      console.log("otp verified")
+      var md = forge.md.sha1.create();
+      md.update(originalData, 'utf8');
+      try{
+        var verified=publicKey.verify(md.digest().bytes(),forge.util.decode64(request.signature))
+      }catch(e){
+        return res.status(401).json({success:false,message:"Invalid Data"})
+      }
+      if (verified==true){
+        const kycData = new KycData({
+          verifierAddress: request.verifierAddress, userId: request.userId, data: originalData,
+        });
+        kycData.save((error, data) => {
+          if(error) res.status(500).json({success: false });
+          else {
+            VerificationRequest.findByIdAndDelete(_id, (error) => {
+              if(error) res.status(500).json({ success: false });
+              else res.json({success:true, message:"Kyc Completed"});
+            })
+          }
+        })
+      }
+    }
+    else{
+      return res.status(401).json({success:false, message:"Invalid Otp"})
+    }
+  });
+
+})
+
 router.post('/sendMail', emailController.email);
 
 router.post('/initiateVerification',(req, res)=>{
-  const {otp, verifierAddress, userId, userPublicKey, signature, email} = req.body;
+  const {otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email} = req.body;
   const newRequest = new VerificationRequest({
-    verifierAddress, userId, otp, signature, email
+    verifierAddress, verifierPublicKey, userId, otp, signature, email
   });
   newRequest.save((error, request) => {
     if (error) res.status(500).json({ success: false, error });
     else res.status(200).json({ success: true, request });
-  });
+  
   // console.log(userPublicKey)
   try{
     var plaintextBytes = forge.util.encodeUtf8(otp);
@@ -76,18 +105,17 @@ router.post('/initiateVerification',(req, res)=>{
   }catch (e) {
     console.log(e);
     alert("cannot encrypt");
+    return res.status(400).json({success:false,message:e})
 }
   encryptedOtp = forge.util.encode64(encryptedOtp)
-  var data="This is the otp:\n\n"+encryptedOtp+" \n\nfor your verification with " + verifierAddress+'\n\n please decrypt with your private key for two factor authorisation.';
+  var data="This is the otp:\n\n"+encryptedOtp+" \n\nfor your verification request number " + request._id+'\n\n please decrypt with your private key for two factor authorisation.';
   console.log(data)
   var body={
     email:email,
     data:data
   }
   axios.post(url+'sendMail',body)
-  .then(function (response) {
-    console.log(response);
-  })
+});
 })
 
 module.exports = router;

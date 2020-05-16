@@ -12,4 +12,4 @@ const finalDataSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model('FinalData', finalDataSchema);
+module.exports = mongoose.model('KycData', finalDataSchema);

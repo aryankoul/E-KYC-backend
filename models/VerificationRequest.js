@@ -18,6 +18,9 @@ const requestSchema = new mongoose.Schema({
   email:{
       type: String,
   },
+  verifierPublicKey: {
+    type: String
+  }
 });
 
 module.exports = mongoose.model('VerificationRequest', requestSchema);
