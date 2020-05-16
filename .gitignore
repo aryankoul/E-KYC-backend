@@ -45,6 +45,9 @@ jspm_packages/
 #config files
 config/
 
+#uploaded files
+uploads/
+
 # Snowpack dependency directory (https://snowpack.dev/)
 web_modules/
 
