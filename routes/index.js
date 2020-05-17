@@ -10,6 +10,7 @@ const KycData = require('../models/KycData');
 const VerificationRequest = require('../models/VerificationRequest');
 const pendingRequestController = require('../controllers/pendingRequestController');
 const emailController = require('../controllers/emailController');
+const qrmailer = require('../controllers/qrmailer')
 
 const url = "http://localhost:8000/";
 
@@ -45,6 +46,8 @@ router.get('/kycData', (req, res) => {
 
 
 router.get('/getPendingRequest', pendingRequestController.getPending);
+
+router.post('/mailQR', qrmailer.qr);
 
 router.post('/verifyOTP',(req,res)=>{
 
