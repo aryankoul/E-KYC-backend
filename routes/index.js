@@ -49,7 +49,7 @@ router.post('/request/delete', (req, res) => {
 });
 
 router.get('/kycData', (req, res) => {
-  const { verifierAddress } = req.body;
+  const { verifierAddress } = req.query;
   KycData.find({ verifierAddress }, (error, data) => {
     if (error) res.status(500).json({ success: false, error });
     else res.status(200).json({ success: true, data });
