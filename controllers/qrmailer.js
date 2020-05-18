@@ -23,7 +23,7 @@ async function sendMail(email,data,fileLocation){
           text: data, // plain text body
           attachments:[
               {
-                  filename:"qrcode.jpg",
+                  filename:"qrcode.png",
                   path:fileLocation
               }
           ]
@@ -45,13 +45,15 @@ exports.qr = (req, res) => {
     var data=req.body.data;
     var email= req.body.email;
     var filename= Date.now()+email;
-    const fileLocation = path.join('./qr', filename+'.jpg');
+    const fileLocation = path.join('./qr', filename+'.png');
     QRCode.toFile(fileLocation,data,{
+      version:40,
     },function(err){
         if(err) throw err
         console.log("done")
         var txt = "Your KYC documents have been verified and the kyc key for reference is "+req.body.userId;
         sendMail(email,txt,fileLocation)
+        res.json({success:true, message:"mail sent"})
     })
 
   };

@@ -22,6 +22,9 @@ const requestSchema = new mongoose.Schema({
   fileName: {
     type: String,
   },
+  qrData:{
+    type:String,
+  },
   email: {
     type: String,
   },

@@ -1,5 +1,7 @@
 const multer = require('multer');
 const path = require('path');
+var fs = require("fs");
+var rp = require('request-promise');
 
 const Request = require('../models/Request');
 
@@ -39,8 +41,40 @@ const upload = multer({
 // mypic is the name of file attribute
 }).single('doc');
 
+function readQr(fileName){
+  const fileLocation = path.join(__dirname,'../uploads', fileName);
+  var file=fs.createReadStream(fileLocation)
+  var options = {
+    method: 'POST',
+    uri: 'https://api.qrserver.com/v1/read-qr-code/',
+    formData: {
+        file: {
+            value: file,
+            options: {
+                filename: 'qrcode.png',
+                contentType: 'image/jpg'
+            }
+        }
+    },
+    headers: {
+        /* 'content-type': 'multipart/form-data' */ // Is set automatically
+    }
+};
+return rp(options);
+// rp(options)
+//     .then(function (body) {
+//         console.log(body)
+        // body=JSON.parse(body)
+        // console.log(body[0].symbol[0].data)
+//         return body[0].symbol[0].data;
+//     })
+//     .catch(function (err) {
+//         return "Error Reading QR CODE!"
+//     });
+}
+
 exports.upload = (req, res) => {
-  upload(req, res, (err) => {
+  upload(req, res, async (err) => {
     if (err) {
       console.log(err);
       res.status(500).json({ success: false, error: err });
@@ -57,8 +91,12 @@ exports.upload = (req, res) => {
         const {
           verifierAddress, userId, type,
         } = req.body;
+        var qrData =await readQr(fileName)
+        qrData=JSON.parse(qrData)
+        qrData=qrData[0].symbol[0].data
+        console.log(qrData)
         newRequest = new Request({
-          verifierAddress, fileName, type, userId,
+          verifierAddress, fileName, qrData, type, userId,
         });
       }
 
