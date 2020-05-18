@@ -27,6 +27,18 @@ router.get('/download/:file', (req, res) => {
   res.download(fileLocation, file);
 });
 
+router.post('/verify',(request, res)=>{
+  const kycData = new KycData({
+    verifierAddress: request.body.verifierAddress, userId: request.body.userId, data: request.body.originalData,
+  });
+  kycData.save((error, data) => {
+    if(error) res.status(500).json({success: false });
+    else {
+      res.status(200).json({success:true, message:"verified"})
+    }
+  })
+})
+
 router.post('/request/delete', (req, res) => {
   const { _id } = req.body;
   console.log(req.body._id);
