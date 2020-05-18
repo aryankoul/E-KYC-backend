@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const forge = require('node-forge')
-const axios = require('axios')
+const axios = require('axios');
 
 const indexController = require('../controllers/indexController');
 const uploadController = require('../controllers/uploadController');
@@ -51,7 +51,7 @@ router.post('/mailQR', qrmailer.qr);
 
 router.post('/verifyOTP',(req,res)=>{
 
-  const {_id, otp, originalData, pk}= req.body;
+  const { _id, otp, originalData }= req.body;
   VerificationRequest.find({ _id }, function (err,requests) {
     // console.log(requests)
     if (err || requests.length==0) return res.json({success:false,message:"Could not locate reuqest"})
