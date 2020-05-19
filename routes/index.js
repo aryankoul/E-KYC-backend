@@ -104,7 +104,7 @@ router.post('/verifyOTP',(req,res)=>{
 router.post('/sendMail', emailController.email);
 
 router.post('/initiateVerification',(req, res)=>{
-  const {otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email} = req.body;
+  const {otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email,_id} = req.body;
   const newRequest = new VerificationRequest({
     verifierAddress, verifierPublicKey, userId, otp, signature, email
   });
@@ -129,7 +129,16 @@ router.post('/initiateVerification',(req, res)=>{
     email:email,
     data:data
   }
-  axios.post(url+'sendMail',body)
+  console.log(_id)
+  axios.post(url+'sendMail',body).then((response)=>{
+    if(response.data.success===true){
+      var bd={
+        _id:_id
+      }
+      console.log(bd)
+      axios.post(url+'request/delete',bd)
+    }
+  })
 });
 })
 

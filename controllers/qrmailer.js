@@ -47,7 +47,6 @@ exports.qr = (req, res) => {
     var filename= Date.now()+email;
     const fileLocation = path.join('./qr', filename+'.png');
     QRCode.toFile(fileLocation,data,{
-      version:40,
     },function(err){
         if(err) throw err
         console.log("done")
