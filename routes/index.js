@@ -93,6 +93,9 @@ router.post('/verifyOTP',(req,res)=>{
           }
         })
       }
+      else{
+        return res.status(401).json({success:false, message:"Invalid data"})
+      }
     }
     else{
       return res.status(401).json({success:false, message:"Invalid Otp"})
