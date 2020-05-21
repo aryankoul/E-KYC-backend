@@ -107,7 +107,7 @@ router.post('/verifyOTP',(req,res)=>{
 router.post('/sendMail', emailController.email);
 
 router.post('/initiateVerification',(req, res)=>{
-  const {otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email,_id} = req.body;
+  const {otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email,_id, encryptedData} = req.body;
   const newRequest = new VerificationRequest({
     verifierAddress, verifierPublicKey, userId, otp, signature, email
   });
@@ -126,7 +126,7 @@ router.post('/initiateVerification',(req, res)=>{
     return res.status(400).json({success:false,message:e})
 }
   encryptedOtp = forge.util.encode64(encryptedOtp)
-  var data="This is the otp:\n\n"+encryptedOtp+" \n\nfor your verification request number " + request._id+'\n\n please decrypt with your private key for two factor authorisation.';
+  var data="This is the otp:\n\n"+encryptedOtp+" \n\n This is the encrypted data format of your KYC data:\n\n"+encryptedData+"\n\nfor your verification request number:    " + request._id+'\n\n please decrypt with your private key for two factor authorisation.';
   console.log(data)
   var body={
     email:email,
