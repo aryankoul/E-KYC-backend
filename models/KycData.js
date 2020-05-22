@@ -10,6 +10,9 @@ const finalDataSchema = new mongoose.Schema({
   userId: {
     type: String,
   },
+  userPublicKey:{
+    type: String
+  }
 });
 
 module.exports = mongoose.model('KycData', finalDataSchema);

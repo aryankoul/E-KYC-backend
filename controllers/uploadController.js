@@ -4,6 +4,7 @@ const fs = require('fs');
 const rp = require('request-promise');
 
 const Request = require('../models/Request');
+const KycData = require('../models/KycData');
 
 let fileName = '';
 const storage = multer.diskStorage({
@@ -20,11 +21,58 @@ const storage = multer.diskStorage({
 // Define the maximum size for uploading
 // picture i.e. 1 MB. it is optional
 const maxSize = 1 * 1000 * 1000;
+
+async function idempotency(req){
+  var flag=false,errMsg='';
+  if(req.body.type==1){
+    await Request.find({verifierAddress:req.body.verifierAddress,publicKey:req.body.publicKey,type:1},(err,docs)=>{
+      console.log(docs.length)
+      if(docs.length!==0){
+        console.log("hi")
+        errMsg="Request already exists"
+        // return errMsg
+        // return cb(true,`${'Request Already Exists'}`);
+      }
+    })
+    await KycData.find({verifierAddress:req.body.verifierAddress,userPublicKey:req.body.publicKey},(err,docs)=>{
+      if(docs.length!==0){
+        console.log(docs)
+        flag=true;
+        errMsg="KYC already done with this bank"
+        // return errMsg
+      }
+    })
+  }
+  else if(req.body.type==2){
+    await Request.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+      if(docs.length!==0){
+        errMsg="Request already exists"
+        flag=true
+        // return errMsg
+      }
+    })
+    await KycData.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+      if(docs.length!==0){
+        console.log(docs)
+        flag=true;
+        errMsg="KYC already done with this bank"
+      }
+    })
+  }
+  return errMsg
+
+}
+
 const upload = multer({
   storage,
   limits: { fileSize: maxSize },
-  fileFilter(req, file, cb) {
-    // Set the filetypes, it is optional
+  async fileFilter (req, file, cb) {
+    console.log(req.body)
+    var check = await idempotency(req)
+    console.log(check)
+    if(check){
+      return cb(check)
+    }
     const filetypes = /jpeg|jpg|png/;
     const mimetype = filetypes.test(file.mimetype);
 
@@ -36,6 +84,7 @@ const upload = multer({
 
     cb(`${'Error: File upload only supports the '
                 + 'following filetypes - '}${filetypes}`);
+
   },
 
 // mypic is the name of file attribute
@@ -78,7 +127,7 @@ exports.upload = (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
       console.log(err);
-      res.status(500).json({ success: false, message: 'file upload  error' });
+      return res.status(401).json({ success: false, message: err });
     } else {
       let newRequest;
       if (req.body.type == null || req.body.type === '') res.status(400).json({ success: false, message: 'type is required' });
