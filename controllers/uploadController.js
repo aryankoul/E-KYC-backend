@@ -162,8 +162,8 @@ exports.upload = (req, res) => {
       }
 
       newRequest.save((error, request) => {
-        if (error) res.status(500).json({ success: false, message: 'error while generating request' });
-        else res.status(200).json({ success: true, message: 'request saved successfully', request });
+        if (error) return res.status(500).json({ success: false, message: 'error while generating request' });
+        else return res.status(200).json({ success: true, message: 'request saved successfully', request });
       });
     }
   });
