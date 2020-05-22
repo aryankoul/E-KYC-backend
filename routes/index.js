@@ -118,8 +118,8 @@ router.post('/verifyOTP',(req,res)=>{
           if(error) res.status(500).json({success: false ,message:"Error saving to Db"});
           else {
             VerificationRequest.findByIdAndDelete(_id, (error) => {
-              if(error) res.status(500).json({ success: false });
-              else res.json({success:true, message:"Kyc Completed"});
+              if(error) return res.status(500).json({ success: false });
+              else return res.json({success:true, message:"Kyc Completed"});
             })
           }
         })

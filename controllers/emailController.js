@@ -36,12 +36,12 @@ async function sendMail(email,data,){
 exports.email = (req, res) => {
 
   console.log(req.body.email, req.body.data)
-    if(req.body.email === null || req.body.email === '') res.status(400).json({ success: false, message: 'email is required' })
-    else if(req.body.data === null || req.body.data === '') res.status(400).json({ success: false, message: 'data is required' })
+    if(req.body.email === null || req.body.email === '') return res.status(400).json({ success: false, message: 'email is required' })
+    else if(req.body.data === null || req.body.data === '') return res.status(400).json({ success: false, message: 'data is required' })
     else{
          sendMail(req.body.email,req.body.data)
      
-        res.status(200).json({
+         return res.status(200).json({
             success: true,
             data:"email sent",
         });

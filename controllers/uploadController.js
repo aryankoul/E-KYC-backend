@@ -135,12 +135,12 @@ exports.upload = (req, res) => {
         const {
           name, phoneNumber, email, docType, verifierAddress, publicKey, type,
         } = req.body;
-        if (name == null || name === '') res.status(400).json({ success: false, message: 'name is required' });
-        if (phoneNumber == null || phoneNumber === '') res.status(400).json({ success: false, message: 'phone number is required' });
-        if (email == null || email === '') res.status(400).json({ success: false, message: 'email is required' });
-        if (docType == null || docType === '') res.status(400).json({ success: false, message: 'doc type is required' });
-        if (verifierAddress == null || verifierAddress === '') res.status(400).json({ success: false, message: 'verifier address is required' });
-        if (publicKey == null || publicKey === '') res.status(400).json({ success: false, message: 'public key is required' });
+        if (name == null || name === '') return res.status(400).json({ success: false, message: 'name is required' });
+        if (phoneNumber == null || phoneNumber === '') return res.status(400).json({ success: false, message: 'phone number is required' });
+        if (email == null || email === '') return res.status(400).json({ success: false, message: 'email is required' });
+        if (docType == null || docType === '') return res.status(400).json({ success: false, message: 'doc type is required' });
+        if (verifierAddress == null || verifierAddress === '') return  res.status(400).json({ success: false, message: 'verifier address is required' });
+        if (publicKey == null || publicKey === '')return res.status(400).json({ success: false, message: 'public key is required' });
         newRequest = new Request({
           name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey,
         });
@@ -149,8 +149,8 @@ exports.upload = (req, res) => {
           verifierAddress, userId, type,
         } = req.body;
 
-        if (verifierAddress == null || verifierAddress === '') res.status(400).json({ success: false, message: 'verifier address is required' });
-        if (userId == null || userId === '') res.status(400).json({ success: false, message: 'user id is required' });
+        if (verifierAddress == null || verifierAddress === '') return res.status(400).json({ success: false, message: 'verifier address is required' });
+        if (userId == null || userId === '') return res.status(400).json({ success: false, message: 'user id is required' });
 
         let qrData = await readQr(fileName);
         qrData = JSON.parse(qrData);

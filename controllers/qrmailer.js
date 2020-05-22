@@ -45,18 +45,18 @@ async function sendMail(email, data, fileLocation) {
 exports.qr = (req, res) => {
   const { data } = req.body;
   const { email } = req.body;
-  if (data == null || data === '') res.status(400).json({ success: false, message: 'data is required' });
-  if (email == null || email === '') res.status(400).json({ success: false, message: 'email is required' });
+  if (data == null || data === '') return res.status(400).json({ success: false, message: 'data is required' });
+  if (email == null || email === '') return res.status(400).json({ success: false, message: 'email is required' });
   const filename = Date.now() + email;
   const fileLocation = path.join('./qr', `${filename}.png`);
   QRCode.toFile(fileLocation, data, {
   }, (err) => {
-    if (err) res.status(500).json({ success: false, message: 'error generating qr code' });
+    if (err) return res.status(500).json({ success: false, message: 'error generating qr code' });
     else {
       console.log('done');
       const txt = `Your KYC documents have been verified and the kyc key for reference is ${req.body.userId}`;
       sendMail(email, txt, fileLocation);
-      res.json({ success: true, message: 'mail sent' });
+      return res.json({ success: true, message: 'mail sent' });
     }
   });
 };
