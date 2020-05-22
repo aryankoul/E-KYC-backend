@@ -25,7 +25,7 @@ const maxSize = 1 * 1000 * 1000;
 async function idempotency(req){
   var flag=false,errMsg='';
   if(req.body.type==1){
-    await Request.find({verifierAddress:req.body.verifierAddress,publicKey:req.body.publicKey,type:1},(err,docs)=>{
+    await Request.find({publicKey:req.body.publicKey,type:1},(err,docs)=>{
       console.log(docs.length)
       if(docs.length!==0){
         console.log("hi")
@@ -34,7 +34,7 @@ async function idempotency(req){
         // return cb(true,`${'Request Already Exists'}`);
       }
     })
-    await KycData.find({verifierAddress:req.body.verifierAddress,userPublicKey:req.body.publicKey},(err,docs)=>{
+    await KycData.find({userPublicKey:req.body.publicKey},(err,docs)=>{
       if(docs.length!==0){
         console.log(docs)
         flag=true;
