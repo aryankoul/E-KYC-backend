@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
 
 // Define the maximum size for uploading
 // picture i.e. 1 MB. it is optional
-const maxSize = 1 * 1000 * 1000;
+const maxSize = 10 * 1000 * 1000;
 
 async function idempotency(req){
   var flag=false,errMsg='';
@@ -58,6 +58,23 @@ async function idempotency(req){
         errMsg="KYC already done with this bank"
       }
     })
+  }
+  else if(req.body.type==3){
+    await KycData.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+      if(docs.length==0){
+        console.log(docs)
+        flag=true;
+        errMsg="Previous KYC not done with this bank"
+      }
+    })
+    await Request.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+      if(docs.length!==0){
+        errMsg="Request already exists"
+        flag=true
+        // return errMsg
+      }
+    })
+    
   }
   return errMsg
 
@@ -144,7 +161,7 @@ exports.upload = (req, res) => {
         newRequest = new Request({
           name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey,
         });
-      } else {
+      } else if(req.body.type=='2'){
         const {
           verifierAddress, userId, type,
         } = req.body;
@@ -158,6 +175,21 @@ exports.upload = (req, res) => {
         console.log(`value: ${qrData}`);
         newRequest = new Request({
           verifierAddress, fileName, qrData, type, userId,
+        });
+      }
+      else{
+        const {
+          name, phoneNumber, email, docType, verifierAddress, publicKey, type, userId
+        } = req.body;
+        if (name == null || name === '') return res.status(400).json({ success: false, message: 'name is required' });
+        if (phoneNumber == null || phoneNumber === '') return res.status(400).json({ success: false, message: 'phone number is required' });
+        if (email == null || email === '') return res.status(400).json({ success: false, message: 'email is required' });
+        if (docType == null || docType === '') return res.status(400).json({ success: false, message: 'doc type is required' });
+        if (verifierAddress == null || verifierAddress === '') return  res.status(400).json({ success: false, message: 'verifier address is required' });
+        if (userId == null || userId === '')return res.status(400).json({ success: false, message: 'userId is required' });
+        if (publicKey == null || publicKey === '')return res.status(400).json({ success: false, message: 'public key is required' });
+        newRequest = new Request({
+          name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey, userId
         });
       }
 

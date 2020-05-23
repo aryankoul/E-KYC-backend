@@ -78,6 +78,34 @@ router.get('/kycData', (req, res) => {
   });
 });
 
+router.post('/updateKyc', (req,res)=>{
+  const {newData,userId} = req.body;
+  if(newData==undefined||newData==''){
+    return res.status(400).json({success:false, message:"user data cannot be empty"})};
+    if(userId==undefined||userId==''){
+      return res.status(400).json({success:false, message:"user id cannot be empty"})};
+  let conditions = {userId:userId};
+    let update = {
+        $set : {
+      data : newData,
+      }
+    };
+    let options = { multi: true, upsert: true };
+
+    // update_many :)
+    KycData.updateMany(
+
+      conditions, update, options,(err, doc) => {
+        console.log(req.body);
+        if(!err) {
+          res.status(200).json({success:true, message:"KYC data updated"});
+        }
+        else {
+          return res.status(400).json({success:false,message:"Failed to update"})
+        }
+      }); 
+})
+
 
 router.get('/getPendingRequest', pendingRequestController.getPending);
 
