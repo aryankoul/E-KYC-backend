@@ -60,11 +60,11 @@ async function idempotency(req){
     })
   }
   else if(req.body.type==3){
-    await KycData.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+    await KycData.find({userId:req.body.userId},(err,docs)=>{
       if(docs.length==0){
         console.log(docs)
         flag=true;
-        errMsg="Previous KYC not done with this bank"
+        errMsg="Previous KYC not done"
       }
     })
     await Request.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
