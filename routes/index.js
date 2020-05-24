@@ -44,15 +44,25 @@ router.post('/verify', (request, res) => {
   if (request.body.userPublicKey == undefined || request.body.userPublicKey == '') {
     return res.status(400).json({ success: false, message: 'User Public Key cannot be empty' });
   }
-  const kycData = new KycData({
-    verifierAddress: request.body.verifierAddress, userId: request.body.userId, data: request.body.originalData, userPublicKey: request.body.userPublicKey,
-  });
-  kycData.save((error, data) => {
-    if (error) res.status(500).json({ success: false, message: 'Error saving to Database', error });
-    else {
-      res.status(200).json({ success: true, message: 'verified' });
+  KycData.find({verifierAddress: request.body.verifierAddress, userId: request.body.userId},(err,docs)=>{
+    if(err){
+      return res.status(403).json({success:false,message:"Database error"})
     }
-  });
+    else if(docs.length!=0){
+      return res.status(200).json({ success: true, message: 'verified' });
+    }
+    else{
+      const kycData = new KycData({
+        verifierAddress: request.body.verifierAddress, userId: request.body.userId, data: request.body.originalData, userPublicKey: request.body.userPublicKey,
+      });
+      kycData.save((error, data) => {
+        if (error) return res.status(500).json({ success: false, message: 'Error saving to Database', error });
+        else {
+          return res.status(200).json({ success: true, message: 'verified' });
+        }
+      });
+    }
+  })
 });
 
 router.post('/request/delete', (req, res) => {
@@ -62,8 +72,8 @@ router.post('/request/delete', (req, res) => {
   const { _id } = req.body;
   console.log(req.body._id);
   Request.deleteOne({ _id }, (error) => {
-    if (error) res.status(500).json({ success: false, message: 'Error deleting from database', error });
-    else res.status(200).json({ success: true });
+    if (error)return res.status(500).json({ success: false, message: 'Error deleting from database', error });
+    else return res.status(200).json({ success: true });
   });
 });
 
