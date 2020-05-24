@@ -16,6 +16,9 @@ const requestSchema = new mongoose.Schema({
   phoneNumber: {
     type: String,
   },
+  address: {
+    type: String
+  },
   publicKey: {
     type: String,
   },

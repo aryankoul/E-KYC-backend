@@ -150,16 +150,17 @@ exports.upload = (req, res) => {
       if (req.body.type == null || req.body.type === '') res.status(400).json({ success: false, message: 'type is required' });
       if (req.body.type === '1') {
         const {
-          name, phoneNumber, email, docType, verifierAddress, publicKey, type,
+          name, phoneNumber, email, docType, verifierAddress, publicKey, type, address
         } = req.body;
         if (name == null || name === '') return res.status(400).json({ success: false, message: 'name is required' });
         if (phoneNumber == null || phoneNumber === '') return res.status(400).json({ success: false, message: 'phone number is required' });
         if (email == null || email === '') return res.status(400).json({ success: false, message: 'email is required' });
+        if (address == null || address === '')return res.status(400).json({ success: false, message: 'address is required' });
         if (docType == null || docType === '') return res.status(400).json({ success: false, message: 'doc type is required' });
         if (verifierAddress == null || verifierAddress === '') return  res.status(400).json({ success: false, message: 'verifier address is required' });
         if (publicKey == null || publicKey === '')return res.status(400).json({ success: false, message: 'public key is required' });
         newRequest = new Request({
-          name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey,
+          name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey, address
         });
       } else if(req.body.type=='2'){
         const {
@@ -179,17 +180,18 @@ exports.upload = (req, res) => {
       }
       else{
         const {
-          name, phoneNumber, email, docType, verifierAddress, publicKey, type, userId
+          name, phoneNumber, email, docType, verifierAddress, publicKey, type, userId, address
         } = req.body;
         if (name == null || name === '') return res.status(400).json({ success: false, message: 'name is required' });
         if (phoneNumber == null || phoneNumber === '') return res.status(400).json({ success: false, message: 'phone number is required' });
         if (email == null || email === '') return res.status(400).json({ success: false, message: 'email is required' });
         if (docType == null || docType === '') return res.status(400).json({ success: false, message: 'doc type is required' });
         if (verifierAddress == null || verifierAddress === '') return  res.status(400).json({ success: false, message: 'verifier address is required' });
+        if (address == null || address === '')return res.status(400).json({ success: false, message: 'address is required' });
         if (userId == null || userId === '')return res.status(400).json({ success: false, message: 'userId is required' });
         if (publicKey == null || publicKey === '')return res.status(400).json({ success: false, message: 'public key is required' });
         newRequest = new Request({
-          name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey, userId
+          name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey, userId,address
         });
       }
 
