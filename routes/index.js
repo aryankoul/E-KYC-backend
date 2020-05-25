@@ -7,6 +7,7 @@ const indexController = require('../controllers/indexController');
 const uploadController = require('../controllers/uploadController');
 const Request = require('../models/Request');
 const KycData = require('../models/KycData');
+const CompletedKyc = require('../models/CompletedKyc');
 const VerificationRequest = require('../models/VerificationRequest');
 const pendingRequestController = require('../controllers/pendingRequestController');
 const emailController = require('../controllers/emailController');
@@ -52,6 +53,12 @@ router.post('/verify', (request, res) => {
       return res.status(200).json({ success: true, message: 'verified' });
     }
     else{
+      const completedKyc = new CompletedKyc({
+        verifierAddress:request.body.verifierAddress, userId:request.body.userId
+      });
+      completedKyc.save((err,data)=>{
+        if(err) return res.status(500).json({ success: false, message: 'Error saving to Database', error });
+      })
       const kycData = new KycData({
         verifierAddress: request.body.verifierAddress, userId: request.body.userId, data: request.body.originalData, userPublicKey: request.body.userPublicKey,
       });
@@ -74,6 +81,29 @@ router.post('/request/delete', (req, res) => {
   Request.deleteOne({ _id }, (error) => {
     if (error)return res.status(500).json({ success: false, message: 'Error deleting from database', error });
     else return res.status(200).json({ success: true });
+  });
+});
+
+router.post('/completedKyc/delete', (req, res) => {
+  if (req.body._id == undefined || req.body._id == '') {
+    return res.status(400).json({ success: false, message: '_id cannot be empty' });
+  }
+  const { _id } = req.body;
+  console.log(req.body._id);
+  CompletedKyc.deleteOne({ _id }, (error) => {
+    if (error)return res.status(500).json({ success: false, message: 'Error deleting from database', error });
+    else return res.status(200).json({ success: true });
+  });
+});
+
+router.get('/completedKyc', (req, res) => {
+  const { verifierAddress } = req.query;
+  if (verifierAddress == undefined || verifierAddress == '') {
+    return res.status(400).json({ success: false, message: 'Verifier Address cannot be empty' });
+  }
+  CompletedKyc.find({ verifierAddress }, (error, data) => {
+    if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
+    else res.status(200).json({ success: true, data });
   });
 });
 
@@ -150,6 +180,12 @@ router.post('/verifyOTP', (req, res) => {
         return res.status(401).json({ success: false, message: 'Mismatched Keys', e });
       }
       if (verified == true) {
+        const completedKyc = new CompletedKyc({
+          verifierAddress:request.verifierAddress, userId:request.userId
+        });
+        completedKyc.save((err,data)=>{
+          if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
+        });
         const kycData = new KycData({
           verifierAddress: request.verifierAddress, userId: request.userId, data: originalData,
         });
