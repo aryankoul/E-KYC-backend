@@ -53,12 +53,6 @@ router.post('/verify', (request, res) => {
       return res.status(200).json({ success: true, message: 'verified' });
     }
     else{
-      const completedKyc = new CompletedKyc({
-        verifierAddress:request.body.verifierAddress, userId:request.body.userId
-      });
-      completedKyc.save((err,data)=>{
-        if(err) return res.status(500).json({ success: false, message: 'Error saving to Database', error });
-      })
       const kycData = new KycData({
         verifierAddress: request.body.verifierAddress, userId: request.body.userId, data: request.body.originalData, userPublicKey: request.body.userPublicKey,
       });
@@ -96,8 +90,8 @@ router.post('/completedKyc/delete', (req, res) => {
   });
 });
 
-router.get('/completedKyc', (req, res) => {
-  const { verifierAddress } = req.query;
+router.post('/completedKyc', (req, res) => {
+  const { verifierAddress } = req.body;
   if (verifierAddress == undefined || verifierAddress == '') {
     return res.status(400).json({ success: false, message: 'Verifier Address cannot be empty' });
   }
