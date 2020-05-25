@@ -112,6 +112,28 @@ router.get('/kycData', (req, res) => {
   });
 });
 
+router.post('/kycData2', (req, res) => {
+  const { customerList } = req.body;
+  console.log(customerList)
+  if (customerList == undefined || customerList == '') {
+    return res.status(400).json({ success: false, message: 'customer list cannot be empty' });
+  }
+  var customerArray= customerList.split("#")
+  console.log(customerArray)
+  var query =[]
+  for(var i=0;i<customerArray.length;i++){
+    var json ={
+      userId:customerArray[i]
+    }
+    query.push(json)
+  }
+  console.log(query)
+  KycData.find({$or:query }, (error, data) => {
+    if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
+    else res.status(200).json({ success: true, data });
+  });
+});
+
 router.post('/updateKyc', (req, res) => {
   const { newData, userId } = req.body;
   if (newData == undefined || newData == '') {
@@ -180,19 +202,12 @@ router.post('/verifyOTP', (req, res) => {
         completedKyc.save((err,data)=>{
           if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
         });
-        const kycData = new KycData({
-          verifierAddress: request.verifierAddress, userId: request.userId, data: originalData,
+        VerificationRequest.findByIdAndDelete(_id, (error) => {
+          if (error) return res.status(500).json({ success: false });
+          return res.json({ success: true, message: 'Kyc Completed' });
         });
-        kycData.save((error, data) => {
-          if (error) res.status(500).json({ success: false, message: 'Error saving to Db' });
-          else {
-            VerificationRequest.findByIdAndDelete(_id, (error) => {
-              if (error) return res.status(500).json({ success: false });
-              return res.json({ success: true, message: 'Kyc Completed' });
-            });
-          }
-        });
-      } else {
+      } 
+      else {
         return res.status(401).json({ success: false, message: 'Invalid data' });
       }
     } else {
