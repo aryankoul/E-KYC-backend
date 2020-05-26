@@ -97,6 +97,31 @@ router.get('/publicKey', (req, res) => {
   })
 });
 
+router.post('/publicKeyArray', (req, res) => {
+  const { verifiersList } = req.body;
+  console.log(verifiersList)
+  if (verifiersList == undefined) {
+    return res.status(400).json({ success: false, message: 'customer list cannot be empty' });
+  }
+  else if(verifiersList == ''){
+    return res.status(200).json({success:true, data:[]});
+  }
+  var verifiersArray= verifiersList.split("#")
+  console.log(verifiersArray)
+  var query =[]
+  for(var i=0;i<verifiersArray.length;i++){
+    var json ={
+      verifierAddress:verifiersArray[i]
+    }
+    query.push(json)
+  }
+  console.log(query)
+  PublicKey.find({$or:query }, (error, data) => {
+    if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
+    else res.status(200).json({ success: true, data });
+  });
+});
+
 router.post('/request/delete', (req, res) => {
   if (req.body._id == undefined || req.body._id == '') {
     return res.status(400).json({ success: false, message: '_id cannot be empty' });
@@ -230,15 +255,25 @@ router.post('/verifyOTP', (req, res) => {
         return res.status(401).json({ success: false, message: 'Mismatched Keys', e });
       }
       if (verified == true) {
-        PublicKey.find({verifierAddress:verifierAddress},(err,docs)=>{
+        var encryptedCid=''
+        // console.log(originalData)
+        PublicKey.find({verifierAddress:request.verifierAddress},(err,docs)=>{
           if (err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
           else{
+            // console.log(docs[0])
             var pKey=docs[0].publicKey;
             pKey = forge.pki.publicKeyFromPem(request.verifierPublicKey);
-            var enctyptedCid = pkey.encrypt(originalData)
-            enctyptedCid = forge.util.encode64(enctyptedCid)
+            // console.log(pKey)
+            try{
+              encryptedCid = pKey.encrypt(originalData)
+            }
+            catch (e){
+              return res.status(400).json({success:false, message:"Public key from mongo error"})
+            }
+            encryptedCid = forge.util.encode64(encryptedCid)
+            // console.log(encryptedCid)
             const completedKyc = new CompletedKyc({
-              verifierAddress:request.verifierAddress, userId:request.userId, enctyptedCid:enctyptedCid
+              verifierAddress:request.verifierAddress, userId:request.userId, encryptedCid:encryptedCid
             });
             completedKyc.save((err,data)=>{
               if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
