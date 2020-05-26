@@ -9,6 +9,7 @@ const Request = require('../models/Request');
 const KycData = require('../models/KycData');
 const CompletedKyc = require('../models/CompletedKyc');
 const VerificationRequest = require('../models/VerificationRequest');
+const PublicKey = require('../models/PublicKey');
 const pendingRequestController = require('../controllers/pendingRequestController');
 const emailController = require('../controllers/emailController');
 const qrmailer = require('../controllers/qrmailer');
@@ -66,6 +67,36 @@ router.post('/verify', (request, res) => {
   })
 });
 
+router.post('/publicKey', (req, res) => {
+  const {verifierAddress, publicKey} = req.body;
+  if (verifierAddress == undefined || verifierAddress == '') {
+    return res.status(400).json({ success: false, message: 'verifier address cannot be empty' });
+  }
+  if (publicKey == undefined || publicKey == '') {
+    return res.status(400).json({ success: false, message: 'public key cannot be empty' });
+  }
+  const pKey = new PublicKey({verifierAddress,publicKey});
+  pKey.save((error, data) => {
+    if (error) return res.status(500).json({ success: false, message: 'Error saving to Database', error });
+    else {
+      return res.status(200).json({ success: true, message: 'saved' });
+    }
+  });
+});
+
+router.get('/publicKey', (req, res) => {
+  const { verifierAddress } = req.params;
+  if (verifierAddress == undefined || verifierAddress == '') {
+    return res.json({ success: false, message: 'verifier address cannot be null/empty' });
+  }
+  PublicKey.find({verifierAddress},(err,docs)=>{
+    if(err) return res.status(400).json({success:false, message:"Error finidng data"})
+    else{
+      return res.status(200).json({success:true, data:docs});
+    }
+  })
+});
+
 router.post('/request/delete', (req, res) => {
   if (req.body._id == undefined || req.body._id == '') {
     return res.status(400).json({ success: false, message: '_id cannot be empty' });
@@ -115,8 +146,11 @@ router.get('/kycData', (req, res) => {
 router.post('/kycData2', (req, res) => {
   const { customerList } = req.body;
   console.log(customerList)
-  if (customerList == undefined || customerList == '') {
+  if (customerList == undefined) {
     return res.status(400).json({ success: false, message: 'customer list cannot be empty' });
+  }
+  else if(customerList == ''){
+    return res.status(200).json({success:true, data:[]});
   }
   var customerArray= customerList.split("#")
   console.log(customerArray)
@@ -196,16 +230,25 @@ router.post('/verifyOTP', (req, res) => {
         return res.status(401).json({ success: false, message: 'Mismatched Keys', e });
       }
       if (verified == true) {
-        const completedKyc = new CompletedKyc({
-          verifierAddress:request.verifierAddress, userId:request.userId
-        });
-        completedKyc.save((err,data)=>{
-          if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
-        });
-        VerificationRequest.findByIdAndDelete(_id, (error) => {
-          if (error) return res.status(500).json({ success: false });
-          return res.json({ success: true, message: 'Kyc Completed' });
-        });
+        PublicKey.find({verifierAddress:verifierAddress},(err,docs)=>{
+          if (err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
+          else{
+            var pKey=docs[0].publicKey;
+            pKey = forge.pki.publicKeyFromPem(request.verifierPublicKey);
+            var enctyptedCid = pkey.encrypt(originalData)
+            enctyptedCid = forge.util.encode64(enctyptedCid)
+            const completedKyc = new CompletedKyc({
+              verifierAddress:request.verifierAddress, userId:request.userId, enctyptedCid:enctyptedCid
+            });
+            completedKyc.save((err,data)=>{
+              if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
+            });
+            VerificationRequest.findByIdAndDelete(_id, (error) => {
+              if (error) return res.status(500).json({ success: false });
+              return res.json({ success: true, message: 'Kyc Completed' });
+            });
+          }
+        })
       } 
       else {
         return res.status(401).json({ success: false, message: 'Invalid data' });

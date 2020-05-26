@@ -4,12 +4,9 @@ const finalDataSchema = new mongoose.Schema({
   verifierAddress: {
     type: String,
   },
-  userId: {
+  publicKey: {
     type: String,
   },
-  encryptedCid: {
-      type: String,
-  }
 });
 
-module.exports = mongoose.model('CompletedKyc', finalDataSchema);
+module.exports = mongoose.model('PublicKey', finalDataSchema);
