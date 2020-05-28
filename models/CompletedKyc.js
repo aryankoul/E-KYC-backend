@@ -9,6 +9,9 @@ const finalDataSchema = new mongoose.Schema({
   },
   encryptedCid: {
       type: String,
+  },
+  mode: {
+    type: Number,
   }
 });
 

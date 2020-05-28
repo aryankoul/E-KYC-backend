@@ -273,7 +273,7 @@ router.post('/verifyOTP', (req, res) => {
             encryptedCid = forge.util.encode64(encryptedCid)
             // console.log(encryptedCid)
             const completedKyc = new CompletedKyc({
-              verifierAddress:request.verifierAddress, userId:request.userId, encryptedCid:encryptedCid
+              verifierAddress:request.verifierAddress, userId:request.userId, encryptedCid:encryptedCid, mode:2
             });
             completedKyc.save((err,data)=>{
               if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
@@ -293,6 +293,20 @@ router.post('/verifyOTP', (req, res) => {
     }
   });
 });
+
+router.post('/pushCompletedKyc', (req, res)=>{
+  var {completedKyc} = req.body;
+  completedKyc = JSON.parse(completedKyc)
+  if(completedKyc==undefined || completedKyc == "")
+    return res.status(400).json({sucess:false, message:"empty body"});
+  else{
+      CompletedKyc.insertMany(completedKyc,(err,docs)=>{
+        if(err) return res.status(400).json({success:false, message:"error", err})
+        else return res.status(200).json({success:true, message:"done"})
+      });
+      
+    }
+  })
 
 router.post('/sendMail', emailController.email);
 
