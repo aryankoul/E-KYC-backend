@@ -262,7 +262,7 @@ router.post('/verifyOTP', (req, res) => {
           else{
             // console.log(docs[0])
             var pKey=docs[0].publicKey;
-            pKey = forge.pki.publicKeyFromPem(request.verifierPublicKey);
+            pKey = forge.pki.publicKeyFromPem(pKey);
             // console.log(pKey)
             try{
               encryptedCid = pKey.encrypt(originalData)

@@ -45,6 +45,8 @@ jspm_packages/
 #config files
 config/
 
+qr/
+
 #uploaded files
 uploads/
 
