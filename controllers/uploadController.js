@@ -167,15 +167,18 @@ exports.upload = (req, res) => {
         });
       } else if(req.body.type=='2'){
         const {
-          verifierAddress, userId, type,
+          verifierAddress, type,
         } = req.body;
 
         if (verifierAddress == null || verifierAddress === '') return res.status(400).json({ success: false, message: 'verifier address is required' });
-        if (userId == null || userId === '') return res.status(400).json({ success: false, message: 'user id is required' });
+        // if (userId == null || userId === '') return res.status(400).json({ success: false, message: 'user id is required' });
 
         let qrData = await readQr(fileName);
         qrData = JSON.parse(qrData);
         qrData = qrData[0].symbol[0].data;
+        var qrDataJson = JSON.parse(qrData);
+        var userId = qrDataJson.userId;
+        console.log(qrDataJson)
         console.log(`value: ${qrData}`);
         newRequest = new Request({
           verifierAddress, fileName, qrData, type, userId,
