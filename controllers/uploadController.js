@@ -51,6 +51,9 @@ async function idempotency(req){
         // return errMsg
       }
     })
+    /**
+     * upload controller is called by verifier and can check if this is in its list or not
+     */
     await KycData.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
       if(docs.length!==0){
         console.log(docs)

@@ -7,7 +7,9 @@ const indexController = require('../controllers/indexController');
 const uploadController = require('../controllers/uploadController');
 const Request = require('../models/Request');
 const KycData = require('../models/KycData');
+const CompletedKyc = require('../models/CompletedKyc');
 const VerificationRequest = require('../models/VerificationRequest');
+const PublicKey = require('../models/PublicKey');
 const pendingRequestController = require('../controllers/pendingRequestController');
 const emailController = require('../controllers/emailController');
 const qrmailer = require('../controllers/qrmailer');
@@ -65,6 +67,61 @@ router.post('/verify', (request, res) => {
   })
 });
 
+router.post('/publicKey', (req, res) => {
+  const {verifierAddress, publicKey} = req.body;
+  if (verifierAddress == undefined || verifierAddress == '') {
+    return res.status(400).json({ success: false, message: 'verifier address cannot be empty' });
+  }
+  if (publicKey == undefined || publicKey == '') {
+    return res.status(400).json({ success: false, message: 'public key cannot be empty' });
+  }
+  const pKey = new PublicKey({verifierAddress,publicKey});
+  pKey.save((error, data) => {
+    if (error) return res.status(500).json({ success: false, message: 'Error saving to Database', error });
+    else {
+      return res.status(200).json({ success: true, message: 'saved' });
+    }
+  });
+});
+
+router.get('/publicKey', (req, res) => {
+  const { verifierAddress } = req.params;
+  if (verifierAddress == undefined || verifierAddress == '') {
+    return res.json({ success: false, message: 'verifier address cannot be null/empty' });
+  }
+  PublicKey.find({verifierAddress},(err,docs)=>{
+    if(err) return res.status(400).json({success:false, message:"Error finidng data"})
+    else{
+      return res.status(200).json({success:true, data:docs});
+    }
+  })
+});
+
+router.post('/publicKeyArray', (req, res) => {
+  const { verifiersList } = req.body;
+  console.log(verifiersList)
+  if (verifiersList == undefined) {
+    return res.status(400).json({ success: false, message: 'customer list cannot be empty' });
+  }
+  else if(verifiersList == ''){
+    return res.status(200).json({success:true, data:[]});
+  }
+  var verifiersArray= verifiersList.split("#")
+  console.log(verifiersArray)
+  var query =[]
+  for(var i=0;i<verifiersArray.length;i++){
+    var json ={
+      verifierAddress:verifiersArray[i]
+    }
+    query.push(json)
+  }
+  console.log(query)
+  PublicKey.find({$or:query }, (error, data) => {
+    if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
+    else res.status(200).json({ success: true, data });
+  });
+});
+
 router.post('/request/delete', (req, res) => {
   if (req.body._id == undefined || req.body._id == '') {
     return res.status(400).json({ success: false, message: '_id cannot be empty' });
@@ -77,12 +134,60 @@ router.post('/request/delete', (req, res) => {
   });
 });
 
+router.post('/completedKyc/delete', (req, res) => {
+  if (req.body._id == undefined || req.body._id == '') {
+    return res.status(400).json({ success: false, message: '_id cannot be empty' });
+  }
+  const { _id } = req.body;
+  console.log(req.body._id);
+  CompletedKyc.deleteOne({ _id }, (error) => {
+    if (error)return res.status(500).json({ success: false, message: 'Error deleting from database', error });
+    else return res.status(200).json({ success: true });
+  });
+});
+
+router.post('/completedKyc', (req, res) => {
+  const { verifierAddress } = req.body;
+  if (verifierAddress == undefined || verifierAddress == '') {
+    return res.status(400).json({ success: false, message: 'Verifier Address cannot be empty' });
+  }
+  CompletedKyc.find({ verifierAddress }, (error, data) => {
+    if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
+    else res.status(200).json({ success: true, data });
+  });
+});
+
 router.get('/kycData', (req, res) => {
   const { verifierAddress } = req.query;
   if (verifierAddress == undefined || verifierAddress == '') {
     return res.status(400).json({ success: false, message: 'Verifier Address cannot be empty' });
   }
   KycData.find({ verifierAddress }, (error, data) => {
+    if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
+    else res.status(200).json({ success: true, data });
+  });
+});
+
+router.post('/kycData2', (req, res) => {
+  const { customerList } = req.body;
+  console.log(customerList)
+  if (customerList == undefined) {
+    return res.status(400).json({ success: false, message: 'customer list cannot be empty' });
+  }
+  else if(customerList == ''){
+    return res.status(200).json({success:true, data:[]});
+  }
+  var customerArray= customerList.split("#")
+  console.log(customerArray)
+  var query =[]
+  for(var i=0;i<customerArray.length;i++){
+    var json ={
+      userId:customerArray[i]
+    }
+    query.push(json)
+  }
+  console.log(query)
+  KycData.find({$or:query }, (error, data) => {
     if (error) res.status(500).json({ success: false, message: 'Error finding data from database', error });
     else res.status(200).json({ success: true, data });
   });
@@ -150,19 +255,37 @@ router.post('/verifyOTP', (req, res) => {
         return res.status(401).json({ success: false, message: 'Mismatched Keys', e });
       }
       if (verified == true) {
-        const kycData = new KycData({
-          verifierAddress: request.verifierAddress, userId: request.userId, data: originalData,
-        });
-        kycData.save((error, data) => {
-          if (error) res.status(500).json({ success: false, message: 'Error saving to Db' });
-          else {
+        var encryptedCid=''
+        // console.log(originalData)
+        PublicKey.find({verifierAddress:request.verifierAddress},(err,docs)=>{
+          if (err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
+          else{
+            // console.log(docs[0])
+            var pKey=docs[0].publicKey;
+            pKey = forge.pki.publicKeyFromPem(pKey);
+            // console.log(pKey)
+            try{
+              encryptedCid = pKey.encrypt(originalData)
+            }
+            catch (e){
+              return res.status(400).json({success:false, message:"Public key from mongo error"})
+            }
+            encryptedCid = forge.util.encode64(encryptedCid)
+            // console.log(encryptedCid)
+            const completedKyc = new CompletedKyc({
+              verifierAddress:request.verifierAddress, userId:request.userId, encryptedCid:encryptedCid
+            });
+            completedKyc.save((err,data)=>{
+              if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
+            });
             VerificationRequest.findByIdAndDelete(_id, (error) => {
               if (error) return res.status(500).json({ success: false });
               return res.json({ success: true, message: 'Kyc Completed' });
             });
           }
-        });
-      } else {
+        })
+      } 
+      else {
         return res.status(401).json({ success: false, message: 'Invalid data' });
       }
     } else {
