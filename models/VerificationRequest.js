@@ -20,6 +20,9 @@ const requestSchema = new mongoose.Schema({
   },
   verifierPublicKey: {
     type: String
+  },
+  bankName: {
+    type: String
   }
 });
 
