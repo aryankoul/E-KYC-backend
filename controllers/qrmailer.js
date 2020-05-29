@@ -45,6 +45,8 @@ async function sendMail(email, data, fileLocation) {
 exports.qr = (req, res) => {
   const { data } = req.body;
   const { email } = req.body;
+  const { bankName } = req.body;
+  const { name } = req.body;
   if (data == null || data === '') return res.status(400).json({ success: false, message: 'data is required' });
   if (email == null || email === '') return res.status(400).json({ success: false, message: 'email is required' });
   const filename = Date.now() + email;
@@ -54,7 +56,7 @@ exports.qr = (req, res) => {
     if (err) return res.status(500).json({ success: false, message: 'error generating qr code' });
     else {
       console.log('done');
-      const txt = `Your KYC documents have been verified and the kyc key for reference is ${req.body.userId}`;
+      const txt = `Dear ${req.body.name} \n\nYour KYC documents have been verified by ${req.body.bankName} and the kyc key for reference is ${req.body.userId}. Please find the attached QR code to be used for KYC verifications in future.`;
       sendMail(email, txt, fileLocation);
       return res.json({ success: true, message: 'mail sent' });
     }

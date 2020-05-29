@@ -244,6 +244,7 @@ router.post('/verifyOTP', (req, res) => {
     if (err || requests.length == 0) return res.json({ success: false, message: 'Could not locate reuqest', err });
     const request = requests[0];
     if (request.otp == otp) {
+      const email = request.email;
       console.log();
       const publicKey = forge.pki.publicKeyFromPem(request.verifierPublicKey);
       console.log('otp verified');
@@ -278,9 +279,19 @@ router.post('/verifyOTP', (req, res) => {
             completedKyc.save((err,data)=>{
               if(err) return res.status(500).json({ success: false, message: 'Error saving to Db' });
             });
+            
             VerificationRequest.findByIdAndDelete(_id, (error) => {
-              if (error) return res.status(500).json({ success: false });
-              return res.json({ success: true, message: 'Kyc Completed' });
+              if (error)
+              return res.status(500).json({ success: false });
+              else{
+                const data = `Your KYC request is complete. You are now registered with ${request.bankName}.`;
+                const body = {
+                  email,
+                  data,
+                };
+                axios.post(`${url}sendMail`, body)
+                return res.json({ success: true, message: 'Kyc Completed' });
+              }
             });
           }
         })
@@ -313,7 +324,7 @@ router.post('/sendMail', emailController.email);
 
 router.post('/initiateVerification', (req, res) => {
   const {
-    otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email, _id, encryptedData,
+    otp, verifierAddress, userId, userPublicKey, verifierPublicKey, signature, email, _id, encryptedData, bankName
   } = req.body;
   if (_id == undefined || _id == '') {
     return res.status(400).json({ success: false, message: '_id cannot be empty' });
@@ -337,7 +348,7 @@ router.post('/initiateVerification', (req, res) => {
     return res.status(400).json({ success: false, message: 'encrypted data cannot be empty' });
   }
   const newRequest = new VerificationRequest({
-    verifierAddress, verifierPublicKey, userId, otp, signature, email,
+    verifierAddress, verifierPublicKey, userId, otp, signature, email, bankName
   });
   newRequest.save((error, request) => {
     if (error) return res.status(500).json({ success: false, error, message: 'Error saving new request' });
@@ -353,7 +364,7 @@ router.post('/initiateVerification', (req, res) => {
       return res.status(400).json({ success: false, message: e });
     }
     encryptedOtp = forge.util.encode64(encryptedOtp);
-    const data = `This is the otp:\n\n${encryptedOtp} \n\n This is the encrypted data format of your KYC data:\n\n${encryptedData}\n\nfor your verification request number:    ${request._id}\n\n please decrypt with your private key for two factor authorisation.`;
+    const data = `Your verification request number: ${request._id}\n\n This is the otp:\n\n${encryptedOtp}\n\n This is the encrypted data format of your KYC data:\n\n${encryptedData}\n\n Please decrypt with your private key for two factor authorisation.\n\n`;
     console.log(data);
     const body = {
       email,
