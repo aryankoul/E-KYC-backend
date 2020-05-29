@@ -34,7 +34,8 @@
     "qrcode-reader": "^1.0.4",
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
-    "socket.io": "^2.3.0"
+    "socket.io": "^2.3.0",
+    "web3": "^1.2.8"
   },
   "devDependencies": {
     "eslint": "^6.8.0",

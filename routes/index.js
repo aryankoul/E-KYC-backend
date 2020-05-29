@@ -296,7 +296,8 @@ router.post('/verifyOTP', (req, res) => {
 
 router.post('/pushCompletedKyc', (req, res)=>{
   var {completedKyc} = req.body;
-  completedKyc = JSON.parse(completedKyc)
+  console.log(completedKyc)
+  // completedKyc = JSON.parse(completedKyc)  
   if(completedKyc==undefined || completedKyc == "")
     return res.status(400).json({sucess:false, message:"empty body"});
   else{
