@@ -6,7 +6,7 @@ const rp = require('request-promise');
 const Request = require('../models/Request');
 const KycData = require('../models/KycData');
 
-let fileName = '';
+let fileName = '',qrData='';
 const storage = multer.diskStorage({
   destination(req, file, cb) {
     // Uploads is the Upload_folder_name
@@ -23,6 +23,7 @@ const storage = multer.diskStorage({
 const maxSize = 10 * 1000 * 1000;
 
 async function idempotency(req){
+
   var flag=false,errMsg='';
   if(req.body.type==1){
     await Request.find({publicKey:req.body.publicKey,type:1},(err,docs)=>{
@@ -44,7 +45,12 @@ async function idempotency(req){
     })
   }
   else if(req.body.type==2){
-    await Request.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+    qrData = await readQr(fileName);
+    qrData = JSON.parse(qrData);
+    qrData = qrData[0].symbol[0].data;
+    qrData = JSON.parse(qrData);
+    console.log(qrData)
+    await Request.find({verifierAddress:req.body.verifierAddress,userId:qrData.userId},(err,docs)=>{
       if(docs.length!==0){
         errMsg="Request already exists"
         flag=true
@@ -54,7 +60,7 @@ async function idempotency(req){
     /**
      * upload controller is called by verifier and can check if this is in its list or not
      */
-    await KycData.find({verifierAddress:req.body.verifierAddress,userId:req.body.userId},(err,docs)=>{
+    await KycData.find({userId:qrData.userId},(err,docs)=>{
       if(docs.length!==0){
         console.log(docs)
         flag=true;
@@ -88,11 +94,11 @@ const upload = multer({
   limits: { fileSize: maxSize },
   async fileFilter (req, file, cb) {
     console.log(req.body)
-    var check = await idempotency(req)
-    console.log(check)
-    if(check){
-      return cb(check)
-    }
+    // var check = await idempotency(req,file)
+    // console.log(check)
+    // if(check){
+    //   return cb(check)
+    // }
     const filetypes = /jpeg|jpg|png/;
     const mimetype = filetypes.test(file.mimetype);
 
@@ -149,6 +155,11 @@ exports.upload = (req, res) => {
       console.log(err);
       return res.status(401).json({ success: false, message: err });
     } else {
+      var check = await idempotency(req)
+      if(check){
+        console.log(qrData.userId)
+        return res.status(400).json({success:false, message:check})
+      }
       let newRequest;
       if (req.body.type == null || req.body.type === '') res.status(400).json({ success: false, message: 'type is required' });
       if (req.body.type === '1') {
@@ -166,6 +177,7 @@ exports.upload = (req, res) => {
           name, phoneNumber, verifierAddress, fileName, type, email, docType, publicKey, address
         });
       } else if(req.body.type=='2'){
+        
         const {
           verifierAddress, type,
         } = req.body;
@@ -173,12 +185,9 @@ exports.upload = (req, res) => {
         if (verifierAddress == null || verifierAddress === '') return res.status(400).json({ success: false, message: 'verifier address is required' });
         // if (userId == null || userId === '') return res.status(400).json({ success: false, message: 'user id is required' });
 
-        let qrData = await readQr(fileName);
-        qrData = JSON.parse(qrData);
-        qrData = qrData[0].symbol[0].data;
-        var qrDataJson = JSON.parse(qrData);
-        var userId = qrDataJson.userId;
-        console.log(qrDataJson)
+        
+        var userId = qrData.userId;
+        console.log(qrData)
         console.log(`value: ${qrData}`);
         newRequest = new Request({
           verifierAddress, fileName, qrData, type, userId,
