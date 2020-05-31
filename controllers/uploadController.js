@@ -46,9 +46,15 @@ async function idempotency(req){
   }
   else if(req.body.type==2){
     qrData = await readQr(fileName);
-    qrData = JSON.parse(qrData);
-    qrData = qrData[0].symbol[0].data;
-    qrData = JSON.parse(qrData);
+    try{
+      qrData = JSON.parse(qrData);
+      qrData = qrData[0].symbol[0].data;
+      qrData = JSON.parse(qrData);
+      var x = qrData.userId;
+    }
+    catch(e){
+      errMsg="Invalid QR code"
+    } 
     console.log(qrData)
     await Request.find({verifierAddress:req.body.verifierAddress,userId:qrData.userId},(err,docs)=>{
       if(docs.length!==0){
@@ -60,7 +66,7 @@ async function idempotency(req){
     /**
      * upload controller is called by verifier and can check if this is in its list or not
      */
-    await KycData.find({userId:qrData.userId},(err,docs)=>{
+    await KycData.find({verifierAddress:req.body.verifierAddress,userId:qrData.userId},(err,docs)=>{
       if(docs.length!==0){
         console.log(docs)
         flag=true;
@@ -188,6 +194,7 @@ exports.upload = (req, res) => {
         
         var userId = qrData.userId;
         console.log(qrData)
+        qrData = JSON.stringify(qrData)
         console.log(`value: ${qrData}`);
         newRequest = new Request({
           verifierAddress, fileName, qrData, type, userId,
@@ -211,6 +218,7 @@ exports.upload = (req, res) => {
       }
 
       newRequest.save((error, request) => {
+        console.log(error)
         if (error) return res.status(500).json({ success: false, message: 'error while generating request' });
         else return res.status(200).json({ success: true, message: 'request saved successfully', request });
       });
